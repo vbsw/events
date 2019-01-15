@@ -3,7 +3,7 @@
 [![GoDoc](https://godoc.org/github.com/vbsw/events?status.svg)](https://godoc.org/github.com/vbsw/events) [![Go Report Card](https://goreportcard.com/badge/github.com/vbsw/events)](https://goreportcard.com/report/github.com/vbsw/events) [![Stability: Experimental](https://masterminds.github.io/stability/experimental.svg)](https://masterminds.github.io/stability/experimental.html)
 
 ## About
-This package contains a simple event queue. It is published on <https://github.com/vbsw/events>.
+This package provides generic event queues and generic events. It is published on <https://github.com/vbsw/events>.
 
 ## Copyright
 Copyright 2019, Vitali Baumtrok (vbsw@mailbox.org).
