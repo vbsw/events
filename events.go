@@ -5,11 +5,10 @@
  *        http://www.boost.org/LICENSE_1_0.txt)
  */
 
-// Package events provides an event queue and events.
+// Package events provides generic event queues and generic events.
 //
 // Version 0.1.0.
 package events
-
 
 // Event is posted into and retrieved from the event queue.
 type Event interface {
@@ -23,15 +22,15 @@ type EventQueue interface {
 	PostEvent(event Event)
 }
 
-// DefaultEvent serves as a template for other events
+// DefaultEvent serves as a template for other events.
 type DefaultEvent struct {
 	eventTypeID int
-	timeStamp uint64
+	timeStamp   uint64
 }
 
-// DefaultEventQueue serves as a template for other event queues
+// DefaultEventQueue serves as a template for other event queues.
 type DefaultEventQueue struct {
-	events []Event
+	events    []Event
 	currIndex int
 	nextIndex int
 }
@@ -86,14 +85,13 @@ func (queue DefaultEventQueue) previewNextIndex(index int) int {
 	nextIndex := index + 1
 	if nextIndex < len(queue.events) {
 		return nextIndex
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func (queue DefaultEventQueue) ensureCapacity() {
 	if queue.events[queue.nextIndex] != nil {
-		events := make([]Event, (len(queue.events) + 1) * 2)
+		events := make([]Event, (len(queue.events)+1)*2)
 		copy(events, queue.events[queue.currIndex:])
 		copy(events, queue.events[:queue.currIndex])
 		queue.currIndex = 0
