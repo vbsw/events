@@ -55,33 +55,33 @@ func NewEventQueue(initialCapacity ...int) EventQueue {
 }
 
 // EventTypeID returns a value representing the type of the event.
-func (event DefaultEvent) EventTypeID() int {
+func (event *DefaultEvent) EventTypeID() int {
 	return event.eventTypeID
 }
 
 // TimeStamp returns a value representing the creation time of the event.
-func (event DefaultEvent) TimeStamp() uint64 {
+func (event *DefaultEvent) TimeStamp() uint64 {
 	return event.timeStamp
 }
 
 // NextEvent returns the next event in the queue. If no event is available, nil is returned.
-func (queue DefaultEventQueue) NextEvent() Event {
+func (queue *DefaultEventQueue) NextEvent() Event {
 	event := queue.events[queue.currIndex]
 	queue.events[queue.currIndex] = nil
-	if queue.currIndex != queue.nextIndex {
+	if event != nil {
 		queue.currIndex = queue.previewNextIndex(queue.currIndex)
 	}
 	return event
 }
 
 // PostEvent puts an event into queue.
-func (queue DefaultEventQueue) PostEvent(event Event) {
+func (queue *DefaultEventQueue) PostEvent(event Event) {
 	queue.ensureCapacity()
 	queue.events[queue.nextIndex] = event
 	queue.nextIndex = queue.previewNextIndex(queue.nextIndex)
 }
 
-func (queue DefaultEventQueue) previewNextIndex(index int) int {
+func (queue *DefaultEventQueue) previewNextIndex(index int) int {
 	nextIndex := index + 1
 	if nextIndex < len(queue.events) {
 		return nextIndex
@@ -89,11 +89,11 @@ func (queue DefaultEventQueue) previewNextIndex(index int) int {
 	return 0
 }
 
-func (queue DefaultEventQueue) ensureCapacity() {
+func (queue *DefaultEventQueue) ensureCapacity() {
 	if queue.events[queue.nextIndex] != nil {
 		events := make([]Event, (len(queue.events)+1)*2)
 		copy(events, queue.events[queue.currIndex:])
-		copy(events, queue.events[:queue.currIndex])
+		copy(events[len(queue.events)-queue.currIndex:], queue.events[:queue.currIndex])
 		queue.currIndex = 0
 		queue.nextIndex = len(queue.events)
 		queue.events = events
