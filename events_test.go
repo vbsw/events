@@ -9,9 +9,9 @@ package events
 
 import "testing"
 
-func TestNewEventQueue(t *testing.T) {
-	queue1 := NewEventQueue(1).(*DefaultEventQueue)
-	queue2 := NewEventQueue(2).(*DefaultEventQueue)
+func TestNewQueue(t *testing.T) {
+	queue1 := NewQueue(1).(*DefaultQueue)
+	queue2 := NewQueue(2).(*DefaultQueue)
 
 	if len(queue1.events) != 1 {
 		t.Error(len(queue1.events))
@@ -22,8 +22,8 @@ func TestNewEventQueue(t *testing.T) {
 }
 
 func TestPostEvent(t *testing.T) {
-	queue1 := NewEventQueue(1).(*DefaultEventQueue)
-	queue2 := NewEventQueue(2).(*DefaultEventQueue)
+	queue1 := NewQueue(1).(*DefaultQueue)
+	queue2 := NewQueue(2).(*DefaultQueue)
 
 	queue1.PostEvent(NewEvent(0, 0))
 	if queue1.currIndex != 0 {
@@ -239,8 +239,8 @@ func TestClose(t *testing.T) {
 	}
 }
 
-func newFilledDefaultQueue(capacity int) *DefaultEventQueue {
-	queue := NewEventQueue(capacity).(*DefaultEventQueue)
+func newFilledDefaultQueue(capacity int) *DefaultQueue {
+	queue := NewQueue(capacity).(*DefaultQueue)
 	for i := 0; i < capacity; i++ {
 		queue.PostEvent(NewEvent(i, 0))
 	}
