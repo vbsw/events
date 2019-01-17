@@ -63,7 +63,7 @@ func NewEventQueue(initialCapacity ...int) EventQueue {
 	return eventQueue
 }
 
-// NewEventQueue returns a simple synchronized event queue. Default capacity is 6.
+// NewSynchronizedEventQueue returns a simple synchronized event queue. Default capacity is 6.
 func NewSynchronizedEventQueue(initialCapacity ...int) EventQueue {
 	eventQueue := new(DefaultSynchronizedEventQueue)
 	if len(initialCapacity) > 0 {
@@ -159,7 +159,7 @@ func (queue *DefaultEventQueue) ensureCapacity() {
 }
 
 func setNil(events []Event) {
-	for i, _ := range events {
+	for i := range events {
 		events[i] = nil
 	}
 }

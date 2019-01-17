@@ -221,6 +221,24 @@ func TestEnsureCapacity2(t *testing.T) {
 	}
 }
 
+func TestClose(t *testing.T) {
+	queue2 := newFilledDefaultQueue(2)
+
+	queue2.Close()
+	if len(queue2.events) != 2 {
+		t.Error(len(queue2.events))
+	}
+	if queue2.events[0] != nil {
+		t.Error(queue2.events[0])
+	}
+	if queue2.events[1] != nil {
+		t.Error(queue2.events[1])
+	}
+	if event := queue2.NextEvent(); event != nil {
+		t.Error(event)
+	}
+}
+
 func newFilledDefaultQueue(capacity int) *DefaultEventQueue {
 	queue := NewEventQueue(capacity).(*DefaultEventQueue)
 	for i := 0; i < capacity; i++ {
