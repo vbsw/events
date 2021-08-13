@@ -1,5 +1,5 @@
 /*
- *          Copyright 2019, Vitali Baumtrok.
+ *        Copyright 2019, 2021 Vitali Baumtrok.
  * Distributed under the Boost Software License, Version 1.0.
  *      (See accompanying file LICENSE or copy at
  *        http://www.boost.org/LICENSE_1_0.txt)
@@ -35,8 +35,8 @@ func TestPostEvent(t *testing.T) {
 	if len(queue1.events) != 1 {
 		t.Error(len(queue1.events))
 	}
-	if queue1.events[0].EventTypeID() != 0 {
-		t.Error(queue1.events[0].EventTypeID())
+	if queue1.events[0].ID() != 0 {
+		t.Error(queue1.events[0].ID())
 	}
 
 	queue2.PostEvent(NewEvent(0, 0))
@@ -56,8 +56,8 @@ func TestPostEvent(t *testing.T) {
 	if len(queue2.events) != 2 {
 		t.Error(len(queue2.events))
 	}
-	if queue2.events[1].EventTypeID() != 1 {
-		t.Error(queue2.events[1].EventTypeID())
+	if queue2.events[1].ID() != 1 {
+		t.Error(queue2.events[1].ID())
 	}
 }
 
@@ -74,8 +74,8 @@ func TestFillDefaultQueue(t *testing.T) {
 	if len(queue1.events) != 1 {
 		t.Error(len(queue1.events))
 	}
-	if queue1.events[0].EventTypeID() != 0 {
-		t.Error(queue1.events[0].EventTypeID())
+	if queue1.events[0].ID() != 0 {
+		t.Error(queue1.events[0].ID())
 	}
 
 	if queue2.currIndex != 0 {
@@ -87,8 +87,8 @@ func TestFillDefaultQueue(t *testing.T) {
 	if len(queue2.events) != 2 {
 		t.Error(len(queue2.events))
 	}
-	if queue2.events[1].EventTypeID() != 1 {
-		t.Error(queue2.events[1].EventTypeID())
+	if queue2.events[1].ID() != 1 {
+		t.Error(queue2.events[1].ID())
 	}
 }
 
@@ -102,8 +102,8 @@ func TestNextEvent1(t *testing.T) {
 	if queue1.nextIndex != 0 {
 		t.Error(queue1.nextIndex)
 	}
-	if event.EventTypeID() != 0 {
-		t.Error(event.EventTypeID())
+	if event.ID() != 0 {
+		t.Error(event.ID())
 	}
 	if queue1.events[0] != nil {
 		t.Error(queue1.events[0])
@@ -120,8 +120,8 @@ func TestNextEvent2(t *testing.T) {
 	if queue2.nextIndex != 0 {
 		t.Error(queue2.nextIndex)
 	}
-	if event.EventTypeID() != 0 {
-		t.Error(event.EventTypeID())
+	if event.ID() != 0 {
+		t.Error(event.ID())
 	}
 	if queue2.events[0] != nil {
 		t.Error(queue2.events[0])
@@ -129,8 +129,8 @@ func TestNextEvent2(t *testing.T) {
 	if queue2.events[1] == nil {
 		t.Error(queue2.events[0])
 	}
-	if queue2.events[1].EventTypeID() != 1 {
-		t.Error(queue2.events[1].EventTypeID())
+	if queue2.events[1].ID() != 1 {
+		t.Error(queue2.events[1].ID())
 	}
 
 	event = queue2.NextEvent()
@@ -140,8 +140,8 @@ func TestNextEvent2(t *testing.T) {
 	if queue2.nextIndex != 0 {
 		t.Error(queue2.nextIndex)
 	}
-	if event.EventTypeID() != 1 {
-		t.Error(event.EventTypeID())
+	if event.ID() != 1 {
+		t.Error(event.ID())
 	}
 	if queue2.events[0] != nil {
 		t.Error(queue2.events[0])
@@ -175,11 +175,11 @@ func TestEnsureCapacity1(t *testing.T) {
 	if len(queue1.events) <= 1 {
 		t.Error(len(queue1.events))
 	}
-	if queue1.events[0].EventTypeID() != 0 {
-		t.Error(queue1.events[0].EventTypeID())
+	if queue1.events[0].ID() != 0 {
+		t.Error(queue1.events[0].ID())
 	}
-	if queue1.events[1].EventTypeID() != 1 {
-		t.Error(queue1.events[1].EventTypeID())
+	if queue1.events[1].ID() != 1 {
+		t.Error(queue1.events[1].ID())
 	}
 }
 
@@ -210,14 +210,14 @@ func TestEnsureCapacity2(t *testing.T) {
 	if queue2.events[3] != nil {
 		t.Error(queue2.events[1])
 	}
-	if queue2.events[0].EventTypeID() != 1 {
-		t.Error(queue2.events[0].EventTypeID())
+	if queue2.events[0].ID() != 1 {
+		t.Error(queue2.events[0].ID())
 	}
-	if queue2.events[1].EventTypeID() != 2 {
-		t.Error(queue2.events[1].EventTypeID())
+	if queue2.events[1].ID() != 2 {
+		t.Error(queue2.events[1].ID())
 	}
-	if queue2.events[2].EventTypeID() != 3 {
-		t.Error(queue2.events[2].EventTypeID())
+	if queue2.events[2].ID() != 3 {
+		t.Error(queue2.events[2].ID())
 	}
 }
 
@@ -225,14 +225,8 @@ func TestClose(t *testing.T) {
 	queue2 := newFilledDefaultQueue(2)
 
 	queue2.Close()
-	if len(queue2.events) != 2 {
+	if len(queue2.events) != 0 {
 		t.Error(len(queue2.events))
-	}
-	if queue2.events[0] != nil {
-		t.Error(queue2.events[0])
-	}
-	if queue2.events[1] != nil {
-		t.Error(queue2.events[1])
 	}
 	if event := queue2.NextEvent(); event != nil {
 		t.Error(event)

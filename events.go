@@ -1,5 +1,5 @@
 /*
- *          Copyright 2019, Vitali Baumtrok.
+ *        Copyright 2019, 2021 Vitali Baumtrok.
  * Distributed under the Boost Software License, Version 1.0.
  *      (See accompanying file LICENSE or copy at
  *        http://www.boost.org/LICENSE_1_0.txt)
@@ -7,15 +7,15 @@
 
 // Package events provides generic event queues and generic events.
 //
-// Version 1.0.0.
+// Version 2.0.0.
 package events
 
 import "sync"
 
-// Event is posted into and retrieved from the event queue.
+// Event is posted to and retrieved from an event queue.
 type Event interface {
-	EventTypeID() int
-	TimeStamp() uint64
+	ID() int
+	Time() uint64
 }
 
 // Queue holds the events.
@@ -27,8 +27,8 @@ type Queue interface {
 
 // DefaultEvent serves as a template for other events.
 type DefaultEvent struct {
-	eventTypeID int
-	timeStamp   uint64
+	id   int
+	time uint64
 }
 
 // DefaultQueue serves as a template for other event queues.
@@ -36,26 +36,28 @@ type DefaultQueue struct {
 	events    []Event
 	currIndex int
 	nextIndex int
+	full      bool
 }
 
-// DefaultSynchronizedQueue serves as a template for other event queues.
-type DefaultSynchronizedQueue struct {
+// DefaultThreadSafeQueue serves as a template for other event queues.
+type DefaultThreadSafeQueue struct {
 	DefaultQueue
 	mutex sync.Mutex
 }
 
-// NewEvent returns a simple event, that may serve as a stub.
-func NewEvent(eventTypeID int, timeStamp uint64) Event {
+// NewEvent returns a new event.
+func NewEvent(id int, time uint64) Event {
 	event := new(DefaultEvent)
-	event.eventTypeID = eventTypeID
-	event.timeStamp = timeStamp
+	event.id = id
+	event.time = time
 	return event
 }
 
-// NewQueue returns a simple unsynchronized event queue. Default capacity is 6.
+// NewQueue returns an event queue. Default capacity is 6.
+// Queues' capacity is increased, if events number exceeds the capacity.
 func NewQueue(initialCapacity ...int) Queue {
 	queue := new(DefaultQueue)
-	if len(initialCapacity) > 0 {
+	if len(initialCapacity) > 0 && initialCapacity[0] > 0 {
 		queue.events = make([]Event, initialCapacity[0])
 	} else {
 		queue.events = make([]Event, 6)
@@ -63,10 +65,11 @@ func NewQueue(initialCapacity ...int) Queue {
 	return queue
 }
 
-// NewSynchronizedQueue returns a simple synchronized event queue. Default capacity is 6.
-func NewSynchronizedQueue(initialCapacity ...int) Queue {
-	queue := new(DefaultSynchronizedQueue)
-	if len(initialCapacity) > 0 {
+// NewThreadSafeQueue returns a thread safe event queue. Default capacity is 6.
+// Queues' capacity is increased, if events number exceeds the capacity.
+func NewThreadSafeQueue(initialCapacity ...int) Queue {
+	queue := new(DefaultThreadSafeQueue)
+	if len(initialCapacity) > 0 && initialCapacity[0] > 0 {
 		queue.events = make([]Event, initialCapacity[0])
 	} else {
 		queue.events = make([]Event, 6)
@@ -74,39 +77,36 @@ func NewSynchronizedQueue(initialCapacity ...int) Queue {
 	return queue
 }
 
-// EventTypeID returns a value representing the type of the event.
-func (event *DefaultEvent) EventTypeID() int {
-	return event.eventTypeID
+// ID returns the id of the event type.
+func (event *DefaultEvent) ID() int {
+	return event.id
 }
 
-// TimeStamp returns a value representing the creation time of the event.
-func (event *DefaultEvent) TimeStamp() uint64 {
-	return event.timeStamp
+// Time returns the creation time of the event.
+func (event *DefaultEvent) Time() uint64 {
+	return event.time
 }
 
 // Close removes all events from queue. Further posted events are ignored. Next call of NextEvent returns nil.
 func (queue *DefaultQueue) Close() {
 	if queue.nextIndex >= 0 {
-		if queue.currIndex < queue.nextIndex {
-			setNil(queue.events[queue.currIndex:queue.nextIndex])
-		} else if queue.nextIndex < queue.currIndex {
-			setNil(queue.events[queue.currIndex:])
-			setNil(queue.events[:queue.nextIndex])
-		} else if queue.events[queue.currIndex] != nil {
-			setNil(queue.events)
-		}
+		queue.events = nil
+		queue.currIndex = -1
 		queue.nextIndex = -1
+		queue.full = false
 	}
 }
 
 // NextEvent returns the next event in the queue if available, otherwise nil.
 func (queue *DefaultQueue) NextEvent() Event {
-	event := queue.events[queue.currIndex]
-	queue.events[queue.currIndex] = nil
-	if event != nil {
-		queue.currIndex = queue.previewNextIndex(queue.currIndex)
+	if queue.currIndex != queue.nextIndex || queue.full {
+		event := queue.events[queue.currIndex]
+		queue.events[queue.currIndex] = nil
+		queue.currIndex = queue.subsequentIndex(queue.currIndex)
+		queue.full = false
+		return event
 	}
-	return event
+	return nil
 }
 
 // PostEvent puts an event into queue.
@@ -114,32 +114,34 @@ func (queue *DefaultQueue) PostEvent(event Event) {
 	if queue.nextIndex >= 0 {
 		queue.ensureCapacity()
 		queue.events[queue.nextIndex] = event
-		queue.nextIndex = queue.previewNextIndex(queue.nextIndex)
+		queue.nextIndex = queue.subsequentIndex(queue.nextIndex)
+		queue.full = bool(queue.nextIndex == queue.currIndex)
 	}
 }
 
 // Close removes all events from queue. Further posted events are ignored. Next call of NextEvent returns nil.
-func (queue *DefaultSynchronizedQueue) Close() {
+func (queue *DefaultThreadSafeQueue) Close() {
 	queue.mutex.Lock()
 	queue.DefaultQueue.Close()
 	queue.mutex.Unlock()
 }
 
 // NextEvent returns the next event in the queue if available, otherwise nil.
-func (queue *DefaultSynchronizedQueue) NextEvent() Event {
+func (queue *DefaultThreadSafeQueue) NextEvent() Event {
 	queue.mutex.Lock()
-	defer queue.mutex.Unlock()
-	return queue.DefaultQueue.NextEvent()
+	event := queue.DefaultQueue.NextEvent()
+	queue.mutex.Unlock()
+	return event
 }
 
-// PostEvent puts an event into queue.
-func (queue *DefaultSynchronizedQueue) PostEvent(event Event) {
+// PostEvent puts an event in queue.
+func (queue *DefaultThreadSafeQueue) PostEvent(event Event) {
 	queue.mutex.Lock()
 	queue.DefaultQueue.PostEvent(event)
 	queue.mutex.Unlock()
 }
 
-func (queue *DefaultQueue) previewNextIndex(index int) int {
+func (queue *DefaultQueue) subsequentIndex(index int) int {
 	nextIndex := index + 1
 	if nextIndex < len(queue.events) {
 		return nextIndex
@@ -148,18 +150,13 @@ func (queue *DefaultQueue) previewNextIndex(index int) int {
 }
 
 func (queue *DefaultQueue) ensureCapacity() {
-	if queue.events[queue.nextIndex] != nil {
+	if queue.full {
 		events := make([]Event, (len(queue.events)+1)*2)
 		copy(events, queue.events[queue.currIndex:])
 		copy(events[len(queue.events)-queue.currIndex:], queue.events[:queue.currIndex])
 		queue.currIndex = 0
 		queue.nextIndex = len(queue.events)
 		queue.events = events
-	}
-}
-
-func setNil(events []Event) {
-	for i := range events {
-		events[i] = nil
+		queue.full = false
 	}
 }

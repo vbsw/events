@@ -6,28 +6,11 @@
 This package provides generic event queues and generic events. It is published on <https://github.com/vbsw/events>.
 
 ## Copyright
-Copyright 2019, Vitali Baumtrok (vbsw@mailbox.org).
+Copyright 2019, 2021 Vitali Baumtrok (vbsw@mailbox.org).
 
 Events is distributed under the Boost Software License, version 1.0. (See accompanying file LICENSE or copy at <http://www.boost.org/LICENSE_1_0.txt>)
 
 Events is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the Boost Software License for more details.
-
-## Using Go
-Get this project:
-
-	$ go get github.com/vbsw/events
-
-Update a local copy:
-
-	$ go get -u github.com/vbsw/events
-
-Compile:
-
-	$ go install github.com/vbsw/events
-
-Run tests:
-
-	$ go test github.com/vbsw/events
 
 ## Using Git
 Get the master branch and all refs of this project:
